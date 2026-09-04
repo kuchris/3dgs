@@ -113,6 +113,13 @@ Gaussians and reduced the fixed preview's L1 loss from 0.2325 to 0.0427:
 
 ![Original photograph beside the densified 1000-step Gaussian render](examples/training/south-building-quality-comparison.png)
 
+Export the quality checkpoint to a standard Gaussian Splatting PLY:
+
+```powershell
+uv run capture-studio export-ply .\outputs\demo\3dgs\quality\checkpoint.pt `
+  --output .\outputs\demo\3dgs\quality\model.ply
+```
+
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
 

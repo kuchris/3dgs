@@ -18,6 +18,11 @@ from capture_studio.gsplat_check import (
     format_gsplat_report,
     run_gsplat_check,
 )
+from capture_studio.model_export import (
+    ModelExportError,
+    export_gaussian_ply,
+    format_model_export_report,
+)
 from capture_studio.photo_analysis import (
     PhotoAnalysisError,
     analyze_folder,
@@ -127,6 +132,15 @@ def _train_quality(args: argparse.Namespace) -> None:
     print(format_gaussian_training_report(result))
 
 
+def _export_ply(args: argparse.Namespace) -> None:
+    try:
+        result = export_gaussian_ply(args.checkpoint, args.output)
+    except ModelExportError as error:
+        print(f"Gaussian export failed: {error}")
+        raise SystemExit(1) from error
+    print(format_model_export_report(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -209,6 +223,15 @@ def main() -> None:
         help="Training image downscale factor (default: 2).",
     )
     quality_parser.set_defaults(handler=_train_quality)
+
+    export_parser = subcommands.add_parser(
+        "export-ply", help="Export a trained checkpoint as a standard 3DGS PLY."
+    )
+    export_parser.add_argument("checkpoint", type=Path, help="Training checkpoint.")
+    export_parser.add_argument(
+        "--output", type=Path, required=True, help="New .ply output file."
+    )
+    export_parser.set_defaults(handler=_export_ply)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."
