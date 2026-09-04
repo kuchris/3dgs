@@ -5,8 +5,11 @@ description = "Local photo-to-3D Gaussian Splatting pipeline with capture qualit
 authors = [
     { name = "kuchris", email = "kuchrisuk@gmail.com" }
 ]
-requires-python = ">=3.11"
-dependencies = []
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "numpy>=2.0,<3",
+    "torch==2.10.0",
+]
 
 [project.scripts]
 capture-studio = "capture_studio:main"
@@ -19,3 +22,11 @@ build-backend = "uv_build"
 dev = [
     "pytest>=9.1.1",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
