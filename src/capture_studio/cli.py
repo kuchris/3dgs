@@ -6,6 +6,11 @@ from capture_studio.colmap_check import (
     format_colmap_report,
     run_colmap_check,
 )
+from capture_studio.gaussian_training import (
+    GaussianTrainingError,
+    format_gaussian_training_report,
+    train_gaussian_smoke_test,
+)
 from capture_studio.gpu_check import GPUCheckError, format_gpu_report, run_gpu_check
 from capture_studio.gsplat_check import (
     GSplatCheckError,
@@ -93,6 +98,20 @@ def _prepare_training(args: argparse.Namespace) -> None:
     print(format_training_data_report(result))
 
 
+def _train_smoke(args: argparse.Namespace) -> None:
+    try:
+        result = train_gaussian_smoke_test(
+            args.data,
+            args.output,
+            steps=args.steps,
+            image_scale=args.image_scale,
+        )
+    except GaussianTrainingError as error:
+        print(f"Gaussian training failed: {error}")
+        raise SystemExit(1) from error
+    print(format_gaussian_training_report(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -135,6 +154,26 @@ def main() -> None:
         help="Maximum width or height in pixels (default: 1600).",
     )
     prepare_parser.set_defaults(handler=_prepare_training)
+
+    train_parser = subcommands.add_parser(
+        "train-smoke", help="Run a short Gaussian Splatting training test."
+    )
+    train_parser.add_argument(
+        "data", type=Path, help="Prepared training-data folder."
+    )
+    train_parser.add_argument(
+        "--output", type=Path, required=True, help="Empty training output folder."
+    )
+    train_parser.add_argument(
+        "--steps", type=int, default=100, help="Optimization steps (default: 100)."
+    )
+    train_parser.add_argument(
+        "--image-scale",
+        type=int,
+        default=4,
+        help="Training image downscale factor (default: 4).",
+    )
+    train_parser.set_defaults(handler=_train_smoke)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."

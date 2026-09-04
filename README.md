@@ -9,7 +9,8 @@ may reduce reconstruction quality.
 The project has a reproducible Python environment, a verified CUDA-enabled
 PyTorch installation, a working gsplat CUDA rasterizer, COLMAP GPU feature
 extraction, basic photo-quality analysis, and a verified sparse reconstruction
-pipeline. Gaussian Splatting training is not implemented yet.
+pipeline. It also has a verified 100-step Gaussian Splatting smoke trainer;
+portfolio-quality densification and longer training are the next stage.
 
 ## Setup
 
@@ -79,6 +80,24 @@ uv run capture-studio prepare-training .\data\demo\south-building\images `
 
 This creates resized images plus matching binary and readable COLMAP models
 under `outputs\demo\3dgs\data`. Generated training data remains ignored by Git.
+
+Run a short end-to-end Gaussian training test at quarter resolution:
+
+```powershell
+uv run capture-studio train-smoke .\outputs\demo\3dgs\data `
+  --output .\outputs\demo\3dgs\smoke `
+  --steps 100 `
+  --image-scale 4
+```
+
+The smoke test loads all cameras and sparse points, optimizes the Gaussians on
+the CUDA GPU, and saves a checkpoint, metrics, and an original-versus-rendered
+comparison. It verifies the training path; it is not the final-quality model.
+
+The verified RTX 5070 Ti run initialized 84,004 Gaussians and reduced the fixed
+preview's L1 loss from 0.2281 to 0.0879 in 100 steps:
+
+![Original photograph beside the 100-step Gaussian render](examples/training/south-building-smoke-comparison.png)
 
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
