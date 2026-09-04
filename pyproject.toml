@@ -7,6 +7,7 @@ authors = [
 ]
 requires-python = ">=3.10,<3.11"
 dependencies = [
+    "gsplat @ git+https://github.com/nerfstudio-project/gsplat.git@2b902ff1891fc7f73f0f9b8c8bfc932cef2b198c",
     "numpy>=2.0,<3",
     "torch==2.10.0",
 ]
@@ -20,11 +21,20 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "ninja>=1.13.0",
     "pytest>=9.1.1",
+    "setuptools<82",
+    "wheel>=0.46.3",
 ]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu130" }
+
+[tool.uv.extra-build-dependencies]
+gsplat = ["ninja>=1.13.0", "setuptools<82", "torch==2.10.0", "wheel>=0.46.3"]
+
+[tool.uv.extra-build-variables]
+gsplat = { BUILD_3DGS = "1", BUILD_EXPERIMENTAL = "0", TORCH_CUDA_ARCH_LIST = "12.0", MAX_JOBS = "2" }
 
 [[tool.uv.index]]
 name = "pytorch-cu130"

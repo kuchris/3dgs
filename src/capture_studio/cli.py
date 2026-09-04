@@ -1,6 +1,11 @@
 import argparse
 
 from capture_studio.gpu_check import GPUCheckError, format_gpu_report, run_gpu_check
+from capture_studio.gsplat_check import (
+    GSplatCheckError,
+    format_gsplat_report,
+    run_gsplat_check,
+)
 from capture_studio.system_check import build_report, format_report
 
 
@@ -15,6 +20,15 @@ def _check_gpu() -> None:
         print(f"GPU smoke test failed: {error}")
         raise SystemExit(1) from error
     print(format_gpu_report(result))
+
+
+def _check_gsplat() -> None:
+    try:
+        result = run_gsplat_check()
+    except GSplatCheckError as error:
+        print(f"gsplat smoke test failed: {error}")
+        raise SystemExit(1) from error
+    print(format_gsplat_report(result))
 
 
 def main() -> None:
@@ -34,6 +48,10 @@ def main() -> None:
     )
     gpu_parser.set_defaults(handler=_check_gpu)
 
+    gsplat_parser = subcommands.add_parser(
+        "check-gsplat", help="Render and differentiate a small Gaussian on CUDA."
+    )
+    gsplat_parser.set_defaults(handler=_check_gsplat)
+
     args = parser.parse_args()
     args.handler()
-
