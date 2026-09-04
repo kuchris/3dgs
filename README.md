@@ -1,14 +1,15 @@
 # Capture Studio
 
 Capture Studio is a local photo-to-3D Gaussian Splatting project. Its first
-portfolio feature will analyze a set of photographs before training and explain
-which images are blurry, redundant, or leave gaps in camera coverage.
+portfolio feature analyzes photographs before training and explains which files
+may reduce reconstruction quality.
 
 ## Current status
 
 The project has a reproducible Python environment, a verified CUDA-enabled
-PyTorch installation, and a working gsplat CUDA rasterizer. 3D reconstruction
-and training are not implemented yet.
+PyTorch installation, a working gsplat CUDA rasterizer, COLMAP GPU feature
+extraction, and basic photo-quality analysis. 3D reconstruction and training
+are not implemented yet.
 
 ## Setup
 
@@ -24,6 +25,25 @@ uv run capture-studio check-gsplat
 uv run capture-studio check-colmap
 uv run pytest
 ```
+
+## Analyze a photo folder
+
+Run the first user-facing feature with a folder containing JPEG, PNG, WebP,
+TIFF, or BMP images:
+
+```powershell
+uv run capture-studio analyze C:\path\to\photos
+```
+
+The report identifies unreadable images, photos below 2 megapixels, possible
+blur, and byte-for-byte duplicates. The blur score is calculated at a
+consistent maximum size so photographs can be compared more fairly. It is a
+screening hint: a low-texture wall can score like a blurry photo even when it
+is in focus.
+
+This command currently analyzes files directly inside the selected folder. It
+does not analyze videos or nested folders. Near-duplicate viewpoints and camera
+coverage will be added after COLMAP reconstruction data is available.
 
 The setup script loads the C++ compiler and CUDA development headers before
 asking `uv` to install the locked dependencies. gsplat is compiled only once;

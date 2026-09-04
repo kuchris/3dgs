@@ -9,6 +9,7 @@ requires-python = ">=3.10,<3.11"
 dependencies = [
     "gsplat @ git+https://github.com/nerfstudio-project/gsplat.git@2b902ff1891fc7f73f0f9b8c8bfc932cef2b198c",
     "numpy>=2.0,<3",
+    "pillow>=11,<13",
     "torch==2.10.0",
 ]
 

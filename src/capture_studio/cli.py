@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from capture_studio.colmap_check import (
     ColmapCheckError,
@@ -11,14 +12,28 @@ from capture_studio.gsplat_check import (
     format_gsplat_report,
     run_gsplat_check,
 )
+from capture_studio.photo_analysis import (
+    PhotoAnalysisError,
+    analyze_folder,
+    format_photo_report,
+)
 from capture_studio.system_check import build_report, format_report
 
 
-def _check_system() -> None:
+def _analyze(args: argparse.Namespace) -> None:
+    try:
+        result = analyze_folder(args.folder)
+    except PhotoAnalysisError as error:
+        print(f"Photo analysis failed: {error}")
+        raise SystemExit(1) from error
+    print(format_photo_report(result))
+
+
+def _check_system(_args: argparse.Namespace) -> None:
     print(format_report(build_report()))
 
 
-def _check_colmap() -> None:
+def _check_colmap(_args: argparse.Namespace) -> None:
     try:
         result = run_colmap_check()
     except ColmapCheckError as error:
@@ -27,7 +42,7 @@ def _check_colmap() -> None:
     print(format_colmap_report(result))
 
 
-def _check_gpu() -> None:
+def _check_gpu(_args: argparse.Namespace) -> None:
     try:
         result = run_gpu_check()
     except GPUCheckError as error:
@@ -36,7 +51,7 @@ def _check_gpu() -> None:
     print(format_gpu_report(result))
 
 
-def _check_gsplat() -> None:
+def _check_gsplat(_args: argparse.Namespace) -> None:
     try:
         result = run_gsplat_check()
     except GSplatCheckError as error:
@@ -51,6 +66,12 @@ def main() -> None:
         description="Build and inspect local 3D Gaussian Splatting captures.",
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
+
+    analyze_parser = subcommands.add_parser(
+        "analyze", help="Check the basic quality of photos in a folder."
+    )
+    analyze_parser.add_argument("folder", type=Path, help="Folder containing photos.")
+    analyze_parser.set_defaults(handler=_analyze)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."
@@ -73,4 +94,4 @@ def main() -> None:
     gsplat_parser.set_defaults(handler=_check_gsplat)
 
     args = parser.parse_args()
-    args.handler()
+    args.handler(args)
