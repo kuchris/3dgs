@@ -17,6 +17,11 @@ from capture_studio.photo_analysis import (
     analyze_folder,
     format_photo_report,
 )
+from capture_studio.reconstruction import (
+    ReconstructionError,
+    format_reconstruction_report,
+    run_reconstruction,
+)
 from capture_studio.system_check import build_report, format_report
 
 
@@ -60,6 +65,15 @@ def _check_gsplat(_args: argparse.Namespace) -> None:
     print(format_gsplat_report(result))
 
 
+def _reconstruct(args: argparse.Namespace) -> None:
+    try:
+        result = run_reconstruction(args.folder, args.output)
+    except ReconstructionError as error:
+        print(f"Reconstruction failed: {error}")
+        raise SystemExit(1) from error
+    print(format_reconstruction_report(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -72,6 +86,17 @@ def main() -> None:
     )
     analyze_parser.add_argument("folder", type=Path, help="Folder containing photos.")
     analyze_parser.set_defaults(handler=_analyze)
+
+    reconstruct_parser = subcommands.add_parser(
+        "reconstruct", help="Build a sparse COLMAP model from a photo folder."
+    )
+    reconstruct_parser.add_argument(
+        "folder", type=Path, help="Folder containing photos."
+    )
+    reconstruct_parser.add_argument(
+        "--output", type=Path, required=True, help="Empty output folder for the model."
+    )
+    reconstruct_parser.set_defaults(handler=_reconstruct)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."

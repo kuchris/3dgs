@@ -8,8 +8,8 @@ may reduce reconstruction quality.
 
 The project has a reproducible Python environment, a verified CUDA-enabled
 PyTorch installation, a working gsplat CUDA rasterizer, COLMAP GPU feature
-extraction, and basic photo-quality analysis. 3D reconstruction and training
-are not implemented yet.
+extraction, basic photo-quality analysis, and a verified sparse reconstruction
+pipeline. Gaussian Splatting training is not implemented yet.
 
 ## Setup
 
@@ -48,6 +48,35 @@ is in focus.
 This command currently analyzes files directly inside the selected folder. It
 does not analyze videos or nested folders. Near-duplicate viewpoints and camera
 coverage will be added after COLMAP reconstruction data is available.
+
+## Run the public reconstruction demo
+
+Download COLMAP's public South Building dataset and reconstruct it:
+
+```powershell
+.\scripts\download-demo-data.ps1
+uv run capture-studio reconstruct .\data\demo\south-building\images --output .\outputs\demo
+```
+
+The download is about 400 MB and contains 128 photographs. Dataset images and
+generated outputs stay inside this project but are ignored by Git. The command
+refuses to overwrite a non-empty output folder; choose a new output name when
+running another reconstruction.
+
+The pipeline runs GPU feature extraction, GPU exhaustive matching, and sparse
+camera reconstruction. It saves each stage's log, the original binary COLMAP
+model, a readable text model for later training, and a PNG point-cloud preview.
+
+The verified demo registered all 128 images into one camera model, triangulated
+84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
+The generated preview is committed here:
+
+![South Building sparse reconstruction](examples/reconstruction/south-building-sparse.png)
+
+The images come from COLMAP's official
+[South Building sample dataset](https://colmap.github.io/datasets.html). The
+project reconstructs the raw images itself and does not reuse the database
+included in the download archive.
 
 The setup script loads the C++ compiler and CUDA development headers before
 asking `uv` to install the locked dependencies. gsplat is compiled only once;
