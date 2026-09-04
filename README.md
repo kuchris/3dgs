@@ -67,6 +67,19 @@ The pipeline runs GPU feature extraction, GPU exhaustive matching, and sparse
 camera reconstruction. It saves each stage's log, the original binary COLMAP
 model, a readable text model for later training, and a PNG point-cloud preview.
 
+Prepare an undistorted, training-ready copy of the registered photos and camera
+model. The 1600-pixel limit balances image detail with GPU memory use:
+
+```powershell
+uv run capture-studio prepare-training .\data\demo\south-building\images `
+  --model .\outputs\demo\sparse\0 `
+  --output .\outputs\demo\3dgs\data `
+  --max-image-size 1600
+```
+
+This creates resized images plus matching binary and readable COLMAP models
+under `outputs\demo\3dgs\data`. Generated training data remains ignored by Git.
+
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
 

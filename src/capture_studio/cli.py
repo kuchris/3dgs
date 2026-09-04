@@ -23,6 +23,11 @@ from capture_studio.reconstruction import (
     run_reconstruction,
 )
 from capture_studio.system_check import build_report, format_report
+from capture_studio.training_data import (
+    TrainingDataError,
+    format_training_data_report,
+    prepare_training_data,
+)
 
 
 def _analyze(args: argparse.Namespace) -> None:
@@ -74,6 +79,20 @@ def _reconstruct(args: argparse.Namespace) -> None:
     print(format_reconstruction_report(result))
 
 
+def _prepare_training(args: argparse.Namespace) -> None:
+    try:
+        result = prepare_training_data(
+            args.folder,
+            args.model,
+            args.output,
+            max_image_size=args.max_image_size,
+        )
+    except TrainingDataError as error:
+        print(f"Training-data preparation failed: {error}")
+        raise SystemExit(1) from error
+    print(format_training_data_report(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -97,6 +116,25 @@ def main() -> None:
         "--output", type=Path, required=True, help="Empty output folder for the model."
     )
     reconstruct_parser.set_defaults(handler=_reconstruct)
+
+    prepare_parser = subcommands.add_parser(
+        "prepare-training",
+        help="Undistort photos and cameras for Gaussian Splatting training.",
+    )
+    prepare_parser.add_argument("folder", type=Path, help="Folder containing photos.")
+    prepare_parser.add_argument(
+        "--model", type=Path, required=True, help="Sparse COLMAP model folder."
+    )
+    prepare_parser.add_argument(
+        "--output", type=Path, required=True, help="Empty training-data folder."
+    )
+    prepare_parser.add_argument(
+        "--max-image-size",
+        type=int,
+        default=1600,
+        help="Maximum width or height in pixels (default: 1600).",
+    )
+    prepare_parser.set_defaults(handler=_prepare_training)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."
