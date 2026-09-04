@@ -1,5 +1,10 @@
 import argparse
 
+from capture_studio.colmap_check import (
+    ColmapCheckError,
+    format_colmap_report,
+    run_colmap_check,
+)
 from capture_studio.gpu_check import GPUCheckError, format_gpu_report, run_gpu_check
 from capture_studio.gsplat_check import (
     GSplatCheckError,
@@ -11,6 +16,15 @@ from capture_studio.system_check import build_report, format_report
 
 def _check_system() -> None:
     print(format_report(build_report()))
+
+
+def _check_colmap() -> None:
+    try:
+        result = run_colmap_check()
+    except ColmapCheckError as error:
+        print(f"COLMAP smoke test failed: {error}")
+        raise SystemExit(1) from error
+    print(format_colmap_report(result))
 
 
 def _check_gpu() -> None:
@@ -42,6 +56,11 @@ def main() -> None:
         "check-system", help="Report local Python, GPU, and native-tool support."
     )
     check_parser.set_defaults(handler=_check_system)
+
+    colmap_parser = subcommands.add_parser(
+        "check-colmap", help="Extract test-image features with COLMAP on CUDA."
+    )
+    colmap_parser.set_defaults(handler=_check_colmap)
 
     gpu_parser = subcommands.add_parser(
         "check-gpu", help="Run and verify a small PyTorch calculation on CUDA."

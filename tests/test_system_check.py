@@ -19,9 +19,11 @@ def test_report_distinguishes_available_and_missing_dependencies() -> None:
             raise metadata.PackageNotFoundError(package)
         raise AssertionError(f"Unexpected package: {package}")
 
-    report = format_report(build_report(fake_runner, fake_package_version))
+    report = format_report(
+        build_report(fake_runner, fake_package_version, colmap_finder=lambda: None)
+    )
 
     assert "[OK     ] NVIDIA GPU: NVIDIA GeForce RTX 5070 Ti" in report
     assert "[MISSING] PyTorch: not installed" in report
     assert "[MISSING] CUDA compiler: nvcc not found in PATH" in report
-    assert "[MISSING] COLMAP: not found in PATH" in report
+    assert "[MISSING] COLMAP: not installed" in report

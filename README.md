@@ -17,9 +17,11 @@ Build Tools. Install [uv](https://docs.astral.sh/uv/), then run:
 
 ```powershell
 .\scripts\setup-windows.ps1
+.\scripts\install-colmap-windows.ps1
 uv run capture-studio check-system
 uv run capture-studio check-gpu
 uv run capture-studio check-gsplat
+uv run capture-studio check-colmap
 uv run pytest
 ```
 
@@ -40,6 +42,11 @@ a 64 by 64 image, checks that the Gaussian is visible, and runs
 backpropagation. A passing result proves that both rendering and the gradient
 calculation needed for training work on the GPU.
 
+`check-colmap` generates a temporary textured image and asks COLMAP to extract
+SIFT features with GPU 0. It then checks the generated database contains real
+features. COLMAP supplies the camera positions that training needs; gsplat uses
+those camera positions to optimize and render the Gaussian scene.
+
 The project uses Python 3.10, PyTorch 2.10, and the CUDA 13.0 PyTorch runtime to
 match a combination covered by gsplat's current Windows build matrix.
 
@@ -47,3 +54,7 @@ gsplat is pinned to commit `2b902ff` and built with its core 3DGS module only.
 The current upstream head contains a Windows CUDA 13 compiler regression in a
 new spherical-harmonics kernel. Optional 2DGS, 3DGUT, and experimental rendering
 modules are outside this project's scope and are disabled.
+
+The COLMAP installer uses the official CUDA-enabled Windows archive for version
+4.2.0 and verifies its published SHA-256 digest before installing it under the
+current user's local Programs folder.

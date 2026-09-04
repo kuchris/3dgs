@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from importlib import metadata
+from pathlib import Path
 import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
+
+from capture_studio.colmap_check import find_colmap
 
 
 @dataclass(frozen=True)
@@ -17,10 +20,11 @@ class Check:
 
 CommandRunner = Callable[[str, Sequence[str]], str | None]
 PackageVersion = Callable[[str], str]
+ColmapFinder = Callable[[], Path | None]
 
 
 def _command_output(command: str, arguments: Sequence[str]) -> str | None:
-    executable = shutil.which(command)
+    executable = command if Path(command).is_file() else shutil.which(command)
     if executable is None:
         return None
 
@@ -43,7 +47,9 @@ def _first_line(output: str | None, missing: str) -> tuple[bool, str]:
 def build_report(
     runner: CommandRunner = _command_output,
     package_version: PackageVersion = metadata.version,
+    colmap_finder: ColmapFinder = find_colmap,
 ) -> list[Check]:
+    colmap_path = colmap_finder()
     checks = [
         Check("Python", True, sys.version.split()[0]),
         Check("uv", *_first_line(runner("uv", ["--version"]), "not found in PATH")),
@@ -64,7 +70,13 @@ def build_report(
             "CUDA compiler",
             *_first_line(runner("nvcc", ["--version"]), "nvcc not found in PATH"),
         ),
-        Check("COLMAP", *_first_line(runner("colmap", ["-h"]), "not found in PATH")),
+        Check(
+            "COLMAP",
+            *_first_line(
+                runner(str(colmap_path) if colmap_path else "colmap", ["-h"]),
+                "not installed",
+            ),
+        ),
     ]
 
     try:
@@ -83,4 +95,3 @@ def format_report(checks: Sequence[Check]) -> str:
         status = "OK" if check.available else "MISSING"
         lines.append(f"[{status:<7}] {check.name}: {check.detail}")
     return "\n".join(lines)
-
