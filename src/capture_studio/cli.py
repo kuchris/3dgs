@@ -12,6 +12,7 @@ from capture_studio.gaussian_training import (
     train_gaussian_quality,
     train_gaussian_smoke_test,
 )
+from capture_studio.gaussian_viewer import GaussianViewerError, serve_gaussian_model
 from capture_studio.gpu_check import GPUCheckError, format_gpu_report, run_gpu_check
 from capture_studio.gsplat_check import (
     GSplatCheckError,
@@ -141,6 +142,19 @@ def _export_ply(args: argparse.Namespace) -> None:
     print(format_model_export_report(result))
 
 
+def _view(args: argparse.Namespace) -> None:
+    try:
+        serve_gaussian_model(
+            args.model,
+            data_path=args.data,
+            port=args.port,
+            open_browser=args.open_browser,
+        )
+    except GaussianViewerError as error:
+        print(f"Gaussian viewer failed: {error}")
+        raise SystemExit(1) from error
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -232,6 +246,26 @@ def main() -> None:
         "--output", type=Path, required=True, help="New .ply output file."
     )
     export_parser.set_defaults(handler=_export_ply)
+
+    view_parser = subcommands.add_parser(
+        "view", help="Open a trained Gaussian PLY in a local browser viewer."
+    )
+    view_parser.add_argument("model", type=Path, help="Exported Gaussian .ply file.")
+    view_parser.add_argument(
+        "--data",
+        type=Path,
+        help="Prepared COLMAP data used to select the initial camera.",
+    )
+    view_parser.add_argument(
+        "--port", type=int, default=8080, help="Local viewer port (default: 8080)."
+    )
+    view_parser.add_argument(
+        "--open-browser",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Open the viewer in the default browser (default: true).",
+    )
+    view_parser.set_defaults(handler=_view)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."

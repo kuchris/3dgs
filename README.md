@@ -120,6 +120,18 @@ uv run capture-studio export-ply .\outputs\demo\3dgs\quality\checkpoint.pt `
   --output .\outputs\demo\3dgs\quality\model.ply
 ```
 
+Open the exported model in the local interactive browser viewer:
+
+```powershell
+uv run capture-studio view .\outputs\demo\3dgs\quality\model.ply `
+  --data .\outputs\demo\3dgs\data
+```
+
+The viewer opens at `http://127.0.0.1:8080`. Drag to rotate, scroll to zoom,
+and right-drag to move. Keep the command running while viewing; press `Ctrl+C`
+in its terminal to stop it. The WebGL Gaussian renderer is provided by
+[Viser](https://viser.studio/).
+
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
 
