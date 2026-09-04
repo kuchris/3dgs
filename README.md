@@ -69,9 +69,14 @@ model, a readable text model for later training, and a PNG point-cloud preview.
 
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.
-The generated preview is committed here:
 
-![South Building sparse reconstruction](examples/reconstruction/south-building-sparse.png)
+| One original photograph (`P1180141.JPG`) | Sparse 3D reconstruction result |
+| --- | --- |
+| ![Original photograph of the South Building](examples/reconstruction/south-building-source.jpg) | ![South Building sparse reconstruction](examples/reconstruction/south-building-sparse.png) |
+
+The colored dots are feature locations matched across multiple photographs and
+triangulated in 3D. This is the sparse geometry used to initialize the later
+Gaussian Splatting stage, not the finished photorealistic 3DGS.
 
 The images come from COLMAP's official
 [South Building sample dataset](https://colmap.github.io/datasets.html). The
