@@ -28,12 +28,16 @@ uv run pytest
 
 ## Analyze a photo folder
 
-Run the first user-facing feature with a folder containing JPEG, PNG, WebP,
-TIFF, or BMP images:
+Run the first user-facing feature against the included synthetic example:
 
 ```powershell
-uv run capture-studio analyze C:\path\to\photos
+uv run capture-studio analyze .\examples\photo-analysis\photos
 ```
+
+The visual comparison is saved at
+[`examples/photo-analysis/comparison.png`](examples/photo-analysis/comparison.png).
+The analyzer accepts any explicitly selected folder containing JPEG, PNG,
+WebP, TIFF, or BMP images.
 
 The report identifies unreadable images, photos below 2 megapixels, possible
 blur, and byte-for-byte duplicates. The blur score is calculated at a
