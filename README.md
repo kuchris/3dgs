@@ -10,7 +10,7 @@ The project has a reproducible Python environment, a verified CUDA-enabled
 PyTorch installation, a working gsplat CUDA rasterizer, COLMAP GPU feature
 extraction, basic photo-quality analysis, and a verified sparse reconstruction
 pipeline. It also has a verified 100-step Gaussian Splatting smoke trainer;
-portfolio-quality densification and longer training are the next stage.
+the quality trainer adds Gaussian splitting, duplication, and pruning.
 
 ## Setup
 
@@ -98,6 +98,20 @@ The verified RTX 5070 Ti run initialized 84,004 Gaussians and reduced the fixed
 preview's L1 loss from 0.2281 to 0.0879 in 100 steps:
 
 ![Original photograph beside the 100-step Gaussian render](examples/training/south-building-smoke-comparison.png)
+
+Run the longer trainer with Gaussian splitting, duplication, and pruning:
+
+```powershell
+uv run capture-studio train-quality .\outputs\demo\3dgs\data `
+  --output .\outputs\demo\3dgs\quality `
+  --steps 1000 `
+  --image-scale 2
+```
+
+The verified 1,000-step run increased the scene from 84,004 to 109,796
+Gaussians and reduced the fixed preview's L1 loss from 0.2325 to 0.0427:
+
+![Original photograph beside the densified 1000-step Gaussian render](examples/training/south-building-quality-comparison.png)
 
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.

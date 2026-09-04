@@ -9,6 +9,7 @@ from capture_studio.gaussian_training import (
     GaussianTrainingResult,
     create_render_comparison,
     format_gaussian_training_report,
+    train_gaussian_quality,
     train_gaussian_smoke_test,
 )
 
@@ -26,8 +27,10 @@ def test_creates_side_by_side_render_comparison(tmp_path: Path) -> None:
 
 def test_report_explains_smoke_training_outputs(tmp_path: Path) -> None:
     result = GaussianTrainingResult(
+        mode="smoke",
         steps=100,
         cameras=128,
+        initial_gaussians=84_004,
         gaussians=84_004,
         initial_loss=0.42,
         final_loss=0.31,
@@ -39,7 +42,7 @@ def test_report_explains_smoke_training_outputs(tmp_path: Path) -> None:
     report = format_gaussian_training_report(result)
 
     assert "[OK] Cameras loaded: 128" in report
-    assert "[OK] Gaussians: 84,004" in report
+    assert "[OK] Gaussians: 84,004 -> 84,004" in report
     assert "[OK] Preview L1 loss: 0.4200 -> 0.3100" in report
     assert f"[OK] Checkpoint: {tmp_path / 'checkpoint.pt'}" in report
 
@@ -49,3 +52,8 @@ def test_rejects_invalid_training_settings(tmp_path: Path) -> None:
         train_gaussian_smoke_test(tmp_path, tmp_path / "output", steps=0)
     with pytest.raises(GaussianTrainingError, match="image scale must be"):
         train_gaussian_smoke_test(tmp_path, tmp_path / "output", image_scale=0)
+
+
+def test_quality_training_requires_a_densification_step(tmp_path: Path) -> None:
+    with pytest.raises(GaussianTrainingError, match="at least 201 steps"):
+        train_gaussian_quality(tmp_path, tmp_path / "output", steps=200)

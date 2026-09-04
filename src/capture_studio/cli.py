@@ -9,6 +9,7 @@ from capture_studio.colmap_check import (
 from capture_studio.gaussian_training import (
     GaussianTrainingError,
     format_gaussian_training_report,
+    train_gaussian_quality,
     train_gaussian_smoke_test,
 )
 from capture_studio.gpu_check import GPUCheckError, format_gpu_report, run_gpu_check
@@ -112,6 +113,20 @@ def _train_smoke(args: argparse.Namespace) -> None:
     print(format_gaussian_training_report(result))
 
 
+def _train_quality(args: argparse.Namespace) -> None:
+    try:
+        result = train_gaussian_quality(
+            args.data,
+            args.output,
+            steps=args.steps,
+            image_scale=args.image_scale,
+        )
+    except GaussianTrainingError as error:
+        print(f"Gaussian training failed: {error}")
+        raise SystemExit(1) from error
+    print(format_gaussian_training_report(result))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="capture-studio",
@@ -174,6 +189,26 @@ def main() -> None:
         help="Training image downscale factor (default: 4).",
     )
     train_parser.set_defaults(handler=_train_smoke)
+
+    quality_parser = subcommands.add_parser(
+        "train-quality", help="Train Gaussians with splitting and pruning."
+    )
+    quality_parser.add_argument(
+        "data", type=Path, help="Prepared training-data folder."
+    )
+    quality_parser.add_argument(
+        "--output", type=Path, required=True, help="Empty training output folder."
+    )
+    quality_parser.add_argument(
+        "--steps", type=int, default=1000, help="Optimization steps (default: 1000)."
+    )
+    quality_parser.add_argument(
+        "--image-scale",
+        type=int,
+        default=2,
+        help="Training image downscale factor (default: 2).",
+    )
+    quality_parser.set_defaults(handler=_train_quality)
 
     check_parser = subcommands.add_parser(
         "check-system", help="Report local Python, GPU, and native-tool support."
