@@ -33,7 +33,7 @@ resumable checkpoint. SH is still degree 0 at this boundary; degree 1 starts
 on the next update, followed by degrees 2 and 3 later in the schedule.
 
 Mean evaluation scores: PSNR 19.1506 dB, SSIM 0.5037, L1 0.07455.
-The first evaluation view's L1 improved from 0.23596 (rounded) to 0.0658.
+The first evaluation view's L1 improved from 0.23604 (rounded) to 0.0658.
 Peak allocated CUDA memory was approximately 0.66 GiB.
 
 The generated comparisons were visually inspected. Building structure is
