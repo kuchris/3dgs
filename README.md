@@ -158,17 +158,33 @@ uv run capture-studio export-ply .\outputs\demo\3dgs\quality-v2\checkpoint.pt `
   --output .\outputs\demo\3dgs\quality-v2\model.ply
 ```
 
-Open the exported model in the local interactive browser viewer:
+### Open the interactive viewer
 
-```powershell
-uv run capture-studio view .\outputs\demo\3dgs\quality-v2\model.ply `
-  --data .\outputs\demo\3dgs\data
+After setup and model export have completed, open PowerShell or Command Prompt
+in the `3dgs` repository folder. For this checkout, the folder is
+`C:\Users\kyost\Desktop\git\3dgs`.
+
+Copy this entire command as **one line** (it works in either shell):
+
+```text
+uv run --no-sync --offline capture-studio view outputs\demo\3dgs\quality-v2\model.ply --data outputs\demo\3dgs\data --no-open-browser
 ```
 
-The viewer opens at `http://127.0.0.1:8080`. Drag to rotate, scroll to zoom,
-and right-drag to move. Keep the command running while viewing; press `Ctrl+C`
-in its terminal to stop it. The WebGL Gaussian renderer is provided by
-[Viser](https://viser.studio/).
+Wait until the terminal prints `Viewer: http://127.0.0.1:8080`, then open
+[the interactive viewer](http://127.0.0.1:8080) in your browser.
+
+- Drag with the left mouse button to rotate.
+- Scroll to zoom; right-drag to move the view.
+- Keep the terminal open while viewing. Closing only the browser tab does not
+  stop the server.
+- Press `Ctrl+C` in that terminal to stop the server.
+
+`--no-sync --offline` uses the existing installed environment without checking
+for dependency updates or downloading packages. It requires a completed setup;
+it cannot repair a missing environment. `--no-open-browser` lets you open the
+browser yourself. Omit that flag if you want the command to try opening it.
+
+The WebGL Gaussian renderer is provided by [Viser](https://viser.studio/).
 
 The previous v1 model remains available under `outputs\demo\3dgs\quality`.
 
