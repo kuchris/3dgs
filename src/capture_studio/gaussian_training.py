@@ -344,22 +344,24 @@ def train_gaussian_smoke_test(
 def train_gaussian_quality(
     data_path: Path,
     output_path: Path,
-    steps: int = 1000,
-    image_scale: int = 2,
+    steps: int = 30000,
+    image_scale: int = 1,
     progress: ProgressReporter = print,
+    resume: Path | None = None,
+    checkpoint_every: int = 1000,
+    stop_after: int | None = None,
 ) -> GaussianTrainingResult:
-    if steps < 201:
-        raise GaussianTrainingError(
-            "quality training requires at least 201 steps for densification"
-        )
-    return _train_gaussians(
+    from capture_studio.quality_training import train_quality_v2
+
+    return train_quality_v2(
         data_path,
         output_path,
         steps=steps,
         image_scale=image_scale,
-        densify=True,
-        mode="quality",
         progress=progress,
+        resume=resume,
+        checkpoint_every=checkpoint_every,
+        stop_after=stop_after,
     )
 
 

@@ -99,31 +99,69 @@ preview's L1 loss from 0.2281 to 0.0879 in 100 steps:
 
 ![Original photograph beside the 100-step Gaussian render](examples/training/south-building-smoke-comparison.png)
 
-Run the longer trainer with Gaussian splitting, duplication, and pruning:
+Quality Trainer v2 uses equally sampled training cameras, SH degree 0 through 3
+for view-dependent colour, and an evaluation split (every eighth photograph).
+The default run uses full prepared resolution and 30,000 steps. Splitting and
+pruning stop at step 15,000, leaving time to refine the resulting Gaussians.
+Short runs scale the schedule down for testing.
 
 ```powershell
 uv run capture-studio train-quality .\outputs\demo\3dgs\data `
-  --output .\outputs\demo\3dgs\quality `
-  --steps 1000 `
-  --image-scale 2
+  --output .\outputs\demo\3dgs\quality-v2 `
+  --steps 30000 `
+  --image-scale 1
 ```
 
-The verified 1,000-step run increased the scene from 84,004 to 109,796
-Gaussians and reduced the fixed preview's L1 loss from 0.2325 to 0.0427:
+The earlier v1 1,000-step run increased the scene from 84,004 to 109,796
+Gaussians and reduced its training preview's L1 loss from 0.2325 to 0.0427.
+This historical result used half resolution and favoured the preview camera;
+it is not a held-out evaluation score:
 
 ![Original photograph beside the densified 1000-step Gaussian render](examples/training/south-building-quality-comparison.png)
 
-Export the quality checkpoint to a standard Gaussian Splatting PLY:
+V2 saves `checkpoint.pt` atomically every 1,000 steps, including Adam optimiser
+states, the learning-rate schedule, densification statistics, and random state.
+To resume, keep the same total `--steps`, `--image-scale`, and input data, and
+choose a new empty output folder:
 
 ```powershell
-uv run capture-studio export-ply .\outputs\demo\3dgs\quality\checkpoint.pt `
-  --output .\outputs\demo\3dgs\quality\model.ply
+uv run capture-studio train-quality .\outputs\demo\3dgs\data `
+  --output .\outputs\demo\3dgs\quality-v2-resumed `
+  --resume .\outputs\demo\3dgs\quality-v2\checkpoint.pt
+```
+
+`--stop-after 1000` pauses deliberately at step 1,000 while retaining the
+30,000-step schedule. A forced interruption resumes from the last saved step.
+V1 checkpoints can still be exported and viewed, but cannot resume v2 training.
+Resume verifies the prepared model and image contents using SHA-256.
+`training.log` records progress, Gaussian counts, and the estimated remaining time.
+CUDA training is not bitwise deterministic; resumed and uninterrupted runs can
+develop slightly different splitting decisions despite restoring training state.
+
+At completion or a deliberate pause, `metrics.json` contains mean and per-camera
+PSNR (higher is better), SSIM (higher is better), and L1 (lower is better).
+`evaluation-*.png` pairs each evaluation photograph with its rendered view.
+The 16 evaluation images in this demo are excluded from photometric training;
+COLMAP camera estimation and sparse initialization still use all 128 images.
+This is a view-rendering evaluation, not a completely unseen reconstruction test.
+
+The PLY exporter preserves SH coefficients from v2 checkpoints. The current
+Viser WebGL viewer displays base colour only and labels that limitation when
+loading an SH model. Use the evaluation renders to inspect full SH appearance.
+The training schedule follows the [original 3DGS recipe](https://github.com/graphdeco-inria/gaussian-splatting)
+and [gsplat's default strategy](https://docs.gsplat.studio/main/apis/strategy.html).
+
+Export a completed v2 quality checkpoint to a standard Gaussian Splatting PLY:
+
+```powershell
+uv run capture-studio export-ply .\outputs\demo\3dgs\quality-v2\checkpoint.pt `
+  --output .\outputs\demo\3dgs\quality-v2\model.ply
 ```
 
 Open the exported model in the local interactive browser viewer:
 
 ```powershell
-uv run capture-studio view .\outputs\demo\3dgs\quality\model.ply `
+uv run capture-studio view .\outputs\demo\3dgs\quality-v2\model.ply `
   --data .\outputs\demo\3dgs\data
 ```
 
@@ -131,6 +169,8 @@ The viewer opens at `http://127.0.0.1:8080`. Drag to rotate, scroll to zoom,
 and right-drag to move. Keep the command running while viewing; press `Ctrl+C`
 in its terminal to stop it. The WebGL Gaussian renderer is provided by
 [Viser](https://viser.studio/).
+
+The previous v1 model remains available under `outputs\demo\3dgs\quality`.
 
 The verified demo registered all 128 images into one camera model, triangulated
 84,004 sparse points, and achieved a mean reprojection error of 0.612 pixels.

@@ -126,6 +126,9 @@ def _train_quality(args: argparse.Namespace) -> None:
             args.output,
             steps=args.steps,
             image_scale=args.image_scale,
+            resume=args.resume,
+            checkpoint_every=args.checkpoint_every,
+            stop_after=args.stop_after,
         )
     except GaussianTrainingError as error:
         print(f"Gaussian training failed: {error}")
@@ -228,13 +231,25 @@ def main() -> None:
         "--output", type=Path, required=True, help="Empty training output folder."
     )
     quality_parser.add_argument(
-        "--steps", type=int, default=1000, help="Optimization steps (default: 1000)."
+        "--steps", type=int, default=30000, help="Total scheduled steps (default: 30000)."
     )
     quality_parser.add_argument(
         "--image-scale",
         type=int,
-        default=2,
-        help="Training image downscale factor (default: 2).",
+        default=1,
+        help="Training image downscale factor (default: 1).",
+    )
+    quality_parser.add_argument(
+        "--resume", type=Path,
+        help="Quality v2 checkpoint; use a new empty output folder.",
+    )
+    quality_parser.add_argument(
+        "--checkpoint-every", type=int, default=1000,
+        help="Save interval in steps (default: 1000).",
+    )
+    quality_parser.add_argument(
+        "--stop-after", type=int,
+        help="Pause after this absolute step, retaining the total schedule.",
     )
     quality_parser.set_defaults(handler=_train_quality)
 
