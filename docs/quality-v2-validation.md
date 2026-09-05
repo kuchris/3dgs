@@ -44,6 +44,27 @@ Local outputs are under `outputs/demo/3dgs/quality-v2-pilot`, including
 `checkpoint.pt`, `config.json`, `metrics.json`, and `evaluation-*.png`.
 The long continuation uses `outputs/demo/3dgs/quality-v2`.
 
+## Completed 30,000-step run
+
+The continuation finished all 30,000 steps and exported `model.ply`.
+The final model contains 1,289,948 Gaussians, with SH degree 3, at full prepared
+1600x1196 resolution. The PLY file is 304,429,206 bytes.
+
+Mean across the same 16 evaluation views: PSNR 20.8514 dB, SSIM 0.7431,
+and L1 0.06722. Peak allocated CUDA memory for the continuation was 2.392 GiB.
+The recorded cumulative elapsed time was 3,788.8 seconds (about 63.1 minutes);
+this counter excludes image preparation/caching and the idle gap before resume.
+
+The README comparison uses `P1180316.JPG` (evaluation index 96, PSNR 20.4761 dB),
+close to the median PSNR of the evaluation views. Visual inspection shows
+reconstructed brick and window detail, with remaining foliage artifacts.
+The first evaluation view, `P1180141.JPG`, is also linked: its render has a
+brightness mismatch and scores only 11.3143 dB PSNR, with L1 0.20388.
+The average improvement does not imply that every individual view improved.
+
+The original generated comparison images were copied unchanged into
+`examples/training`, alongside the complete final per-camera metrics JSON.
+
 Evaluation images are excluded from photometric training, but COLMAP camera
 estimation and sparse initialization use all images. The previous v1 score
 used a favoured training view and a different image resolution, so it is not

@@ -9,8 +9,42 @@ may reduce reconstruction quality.
 The project has a reproducible Python environment, a verified CUDA-enabled
 PyTorch installation, a working gsplat CUDA rasterizer, COLMAP GPU feature
 extraction, basic photo-quality analysis, and a verified sparse reconstruction
-pipeline. It also has a verified 100-step Gaussian Splatting smoke trainer;
-the quality trainer adds Gaussian splitting, duplication, and pruning.
+pipeline. Quality Trainer v2 has completed a 30,000-step run with Gaussian
+splitting, pruning, view-dependent colour, resumable checkpoints, and evaluation
+on photographs excluded from photometric training. A local interactive viewer
+loads the exported Gaussian PLY.
+
+## Final result: 30,000-step South Building reconstruction
+
+Trained on an **RTX 5070 Ti**, using **112 training photos** and **16 evaluation
+photos**, at 1600x1196 resolution with SH degree 3. The finished model contains
+**1,289,948 Gaussians** (initialized from 84,004 sparse points).
+
+Original photograph on the left; final 3DGS render on the right. This evaluation
+view (`P1180316.JPG`) has PSNR 20.48 dB, close to the median of the 16 views.
+
+![Original photograph beside the final 30000-step Gaussian render](examples/training/south-building-v2-final-comparison.png)
+
+| Mean across 16 evaluation views | Final result |
+| --- | ---: |
+| PSNR (higher is better) | 20.85 dB |
+| SSIM (higher is better) | 0.7431 |
+| L1 (lower is better) | 0.06722 |
+
+These are full-SH evaluation renders. The browser viewer currently displays
+base colour only. Brick and window detail is visible, while foliage and some
+viewpoints still have artifacts. The [first evaluation view](examples/training/south-building-v2-final-first-view.png)
+has a substantial brightness mismatch (PSNR 11.31 dB); quality varies by view.
+
+Evaluation photos were excluded from photometric training, but COLMAP camera
+estimation and sparse initialization used all 128 photos. See the
+[full per-view metrics](examples/training/south-building-v2-final-metrics.json)
+and [verification record](docs/quality-v2-validation.md).
+
+The completed model is stored locally at `outputs\demo\3dgs\quality-v2\model.ply`.
+Follow [Open the interactive viewer](#open-the-interactive-viewer) to explore it.
+The generated model stays local; the comparison images and metrics are included
+in this repository.
 
 ## Setup
 
