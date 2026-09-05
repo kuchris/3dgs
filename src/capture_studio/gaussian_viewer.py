@@ -21,6 +21,7 @@ class GaussianViewerData:
     covariances: np.ndarray
     colors: np.ndarray
     opacities: np.ndarray
+    sh_degree: int = 0
 
 
 @dataclass(frozen=True)
@@ -93,6 +94,7 @@ def load_gaussian_viewer_data(model_path: Path) -> GaussianViewerData:
         covariances=covariances,
         colors=colors,
         opacities=opacities.astype(np.float32),
+        sh_degree=int(np.sqrt(1 + splats["shN"].shape[1])) - 1,
     )
 
 
@@ -151,6 +153,11 @@ def serve_gaussian_model(
         initial_value=len(data.centers),
         disabled=True,
     )
+    if data.sh_degree > 0:
+        server.gui.add_markdown(
+            "Base-colour preview: this WebGL viewer does not display the model's "
+            "view-dependent colours. Evaluation renders use all SH coefficients."
+        )
 
     if data_path is not None:
         try:

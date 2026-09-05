@@ -41,7 +41,12 @@ def export_gaussian_ply(checkpoint_path: Path, output_path: Path) -> ModelExport
     except Exception as error:
         raise ModelExportError(f"could not load checkpoint: {error}") from error
 
-    required = ("means", "scales", "quaternions", "opacities", "color_logits")
+    if checkpoint.get("format_version") == 3:
+        parameters = checkpoint["parameters"]
+        checkpoint = {**checkpoint, **parameters, "quaternions": parameters["quats"]}
+    has_sh = "sh0" in checkpoint and "shN" in checkpoint
+    color_keys = ("sh0", "shN") if has_sh else ("color_logits",)
+    required = ("means", "scales", "quaternions", "opacities", *color_keys)
     missing = [name for name in required if name not in checkpoint]
     if missing:
         raise ModelExportError(
@@ -52,22 +57,27 @@ def export_gaussian_ply(checkpoint_path: Path, output_path: Path) -> ModelExport
     scales = checkpoint["scales"].float()
     quaternions = checkpoint["quaternions"].float()
     opacities = checkpoint["opacities"].float()
-    color_logits = checkpoint["color_logits"].float()
     count = len(means)
     expected_shapes = {
         "means": (count, 3),
         "scales": (count, 3),
         "quaternions": (count, 4),
         "opacities": (count,),
-        "color_logits": (count, 3),
     }
     tensors = {
         "means": means,
         "scales": scales,
         "quaternions": quaternions,
         "opacities": opacities,
-        "color_logits": color_logits,
     }
+    if has_sh:
+        degree = checkpoint.get("sh_degree", 3)
+        if degree not in (0, 1, 2, 3):
+            raise ModelExportError("SH degree must be between 0 and 3")
+        expected_shapes.update({"sh0": (count, 1, 3), "shN": (count, 15, 3)})
+    else:
+        expected_shapes["color_logits"] = (count, 3)
+    tensors.update({key: checkpoint[key].float() for key in color_keys})
     for name, tensor in tensors.items():
         if tuple(tensor.shape) != expected_shapes[name]:
             raise ModelExportError(
@@ -82,9 +92,13 @@ def export_gaussian_ply(checkpoint_path: Path, output_path: Path) -> ModelExport
         raise ModelExportError("checkpoint contains a zero-length quaternion")
     quaternions = quaternions / quaternion_norms
 
-    rgb = torch.sigmoid(color_logits)
-    spherical_harmonics_dc = ((rgb - 0.5) / 0.28209479177387814).unsqueeze(1)
-    spherical_harmonics_rest = torch.empty((count, 0, 3), dtype=torch.float32)
+    if has_sh:
+        spherical_harmonics_dc = tensors["sh0"]
+        spherical_harmonics_rest = tensors["shN"][:, :(degree + 1) ** 2 - 1]
+    else:
+        rgb = torch.sigmoid(tensors["color_logits"])
+        spherical_harmonics_dc = ((rgb - 0.5) / 0.28209479177387814).unsqueeze(1)
+        spherical_harmonics_rest = torch.empty((count, 0, 3), dtype=torch.float32)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     export_splats(
         means=means,
